@@ -1,0 +1,154 @@
+#!/usr/bin/env perl
+
+use v5.42;
+
+use File::Basename qw<basename dirname>;
+use File::Spec::Functions qw<catfile>;
+use File::Glob qw<:globally :nocase>;
+use File::Copy qw<copy>;
+
+my %flags = (verbose => 0, overwrite => 0, stdout => 0,);
+my @config_files = (
+    catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
+            'newf', 'config.m4'),
+    );
+my @templ_dirs = ();
+
+my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES);
+chomp $xdg_templ_dir;
+push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir && $xdg_templ_dir ne $ENV{HOME};
+
+my $current_filetype = undef;
+my $is_exec = 0;
+my @targets = ();
+
+while (my $arg = shift @ARGV) {
+    if ($arg =~ /-\w+/) {
+        my @opt  = split $arg;
+        shift @opt;
+        foreach (@opt) {
+            if ($_ eq 'v') {$flags{"verbose"}   = 1; next}
+            if ($_ eq 'f') {$flags{"overwrite"} = 1; next}
+            if ($_ eq 'o') {$flags{"stdout"}    = 1; next}
+            if ($_ eq 'd') {
+                die "-$_ options should be tailing." if $arg !~ /d$/;
+                my $new = shift @ARGV;
+                die "illegal argument for -$_" if $new;
+                unshift @templ_dirs, $new; next
+            }
+            if ($_ eq 'c') {
+                die "-$_ options should be tailing." if $arg !~ /d$/;
+                my $new = shift @ARGV;
+                die "illegal argument for -$_" if $new;
+                push @config_files, $new; next
+            }
+            if ($_ eq 'T') {$current_filetype = undef; next}
+            if ($_ eq 't') {
+                die "-$_ options should be tailing." if $arg !~ /d$/;
+                my $new = shift @ARGV;
+                # TODO: sanitize type path
+                die "illegal argument for -$_" if $new;
+                $current_filetype = $new; next
+            }
+            if ($_ eq 'x') {$is_exec = !$is_exec; next}
+            if ($_ eq 'X') {$is_exec =         0; next}
+            die "Unknown option $_."
+        }
+    } elsif ($arg eq '+x') {
+        $is_exec = 1;
+    } else {
+        push @targets, [$arg, $current_filetype, $is_exec]
+    }
+}
+@config_files = grep { -r $_ } @config_files;
+@templ_dirs   = grep { -r $_ } @templ_dirs;
+
+my %templ_rec = ();
+while (my $target = shift @targets) {
+    my $is_overwritten = 0;
+    if (-e $target) {
+        if (!$flags{verbose}) {
+            warn "Cannot create $target as it's already exists.";
+            next
+        } elsif (!(-f _ && -w _)) {
+            warn "Canoot overwrite $target as it's either not a file, " .
+                "or user have no permission to write.";
+            next
+        } else { $is_overwritten = 1 }
+    }
+
+    my ($name, $type, $xbit) = @$target;
+    if (!defined $type) {
+        my $s = basename $name;
+        my $i = rindex $s, '.';
+        my $type = $i >= 0 ? substr $s, $i + 1 : $s;
+    }
+
+    my ($args, $templ) = ([], undef);
+    if (exists $templ_rec{$type}) {
+        ($templ, $args) = @{$templ_rec{$type}};
+    } else {
+        my $type_holder = $type;
+        # find templ
+        foreach my $templ_dir (@templ_dirs) {
+            while ($type && $type ne "." && $type ne "/") {
+                my $pat = catfile $templ_dir, $type;
+                $pat = catfile $pat, 'default' if -d $pat;
+                $templ = (grep {-f $_ && (-r _ || -x _)} glob("$pat.*"))[0];
+                last if defined $templ;
+                unshift @$args, basename $type;
+                $type = dirname $type;
+            }
+            $type = $type_holder;
+            last if defined $templ;
+        }
+        $templ_rec{$type_holder} = [$templ, $args];
+    }
+    if (!$templ) {
+        open my $fh, '>>', $target
+            or (warn "open $target failed!" and next);
+        close $fh, goto LOOP_END;
+    }
+
+    if (-x $templ) {system $templ, @$args; goto LOOP_END}
+
+    if (-B _) {
+        warn "$templ is a binary file. " .
+            "it will copy to $target anyway." if $flags{stdout};
+        copy ($templ, $target)
+            or (warn "Failed to copy from $templ to $target: $!" and next);
+        goto LOOP_END;
+    }
+
+    my ($i_fh, $o_fh);
+    my @m4_argv = ();
+    foreach my($i, $v) (each @$args) {
+        $i--; push @m4_argv, "-DARG${i}='$v'";
+    } push @m4_argv,  "-DARC='" . scalar @$args . "'";
+    my $cmd = join " ", "m4", "-DNAME='$name'", @m4_argv,
+        map {"'$_'"} @config_files, $templ;
+    open($i_fh, "-|", $cmd)
+        or (warn "Failed to open pipe to run $cmd: $!" and next);
+    if ($flags{stdout}) {
+        $o_fh = \*STDOUT;
+    } elsif (!(open $o_fh, ">", $target)) {
+        warn "Failed to open $target: $!"; close $i_fh; next;
+    }
+    while (<$i_fh>) {chomp; print $o_fh "$_\n";}
+    close $i_fh; close $o_fh;
+  LOOP_END:
+    my $added_xbit = 0;
+    if ($xbit) {
+        if (my $mode = (stat $target)[2]) {
+            if (chmod $mode | 0111, $target) {
+                $added_xbit = 1;
+           } else {warn "chmod +x $target failed: $!";}
+        } else {warn "get $target stat failed: $!";}
+    }
+    if ($flags{verbose}) {
+        printf STDERR "%s %s%s using %s\n",
+            ($is_overwritten ? "Overwrite" : "Create"),
+            ($added_xbit ? "executable" : ""), $target,
+            ($templ // "no tmeplate");
+    }
+}
