@@ -1,0 +1,130 @@
+.\" groff -Tpdf -mdoc
+.Dd March 5, 2026
+.Dt NEWF 1
+.Os
+.Sh NAME
+.Nm newf
+.Nd create new files from templates
+.Sh SYNOPSIS
+.Nm
+.Op Fl fhov
+.Op Fl c Ar config
+.Op Fl d Ar directory
+.Oo
+.Op Fl T
+|
+.Fl t Ar filetype
+.Oc
+.Oo
+.Op Fl X
+|
+.Op Fl x
+|
+.Cm +x
+.Oc
+.Ar target ...
+.Sh DESCRIPTION
+The
+.Nm
+utility creates new files based on templates.
+It searches for templates in a set of directories, processes them using
+.Xr m4 1
+if they are text files, or copies them if they are binary.
+If a template is executable, it is executed directly to create the target.
+.Pp
+State-changing options like
+.Fl t
+and
+.Fl x
+apply to all subsequent
+.Ar target
+arguments until changed again.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl c Ar config
+Specify an additional
+.Xr m4 1
+configuration file to be sourced before the template.
+This can be used multiple times.
+.It Fl d Ar directory
+Specify an additional directory to search for templates.
+This can be used multiple times.
+Templates found in these directories have priority over default ones.
+.It Fl f
+Overwrite existing files and create parent directories if they do not exist.
+.It Fl h
+Display a help message and exit.
+.It Fl o
+Output the generated content to standard output instead of creating files on disk.
+If multiple targets are processed, their contents are separated by a NULL character.
+.It Fl T
+Reset filetype detection to automatic based on the target's extension or name.
+This is the default.
+.It Fl t Ar filetype
+Manually set the filetype for subsequent targets.
+If
+.Ar filetype
+starts with
+.Sq ./ ,
+the
+.Sq .
+is replaced with the auto-detected type from the filename.
+.It Fl v
+Verbose mode.
+Print information about created files and used templates to standard error.
+.It Fl X
+Clear the execute bit for subsequent targets.
+This is the default.
+.It Fl x
+Toggle the execute bit for subsequent targets.
+.It Cm +x
+Set the execute bit for subsequent targets.
+.El
+.Sh TEMPLATES
+Templates are searched in:
+.Ol
+.It
+Directories specified with
+.Fl d .
+.It
+The directory returned by
+.Ic xdg-user-dir TEMPLATES .
+.It
+.Pa ~/Templates
+if the above is unavailable.
+.El
+.Pp
+For a given filetype
+.Ar type/subtype ,
+.Nm
+looks for a file named
+.Ar type/subtype
+or
+.Ar type/subtype.*
+(case-insensitive).
+If a directory matches, it looks for a file named
+.Ar default
+therein.
+If no match is found, it strips the last component (the subtype) and tries again with the remaining path.
+.Sh M4 VARIABLES
+When processing a text template with
+.Xr m4 1 ,
+the following variables are defined:
+.Bl -tag -width "NAME"
+.It Ev NAME
+The name of the target file being created.
+.It Ev ARG1 , ARG2 , ...
+The subtypes extracted from the filetype path.
+.It Ev ARC
+The total count of subtypes.
+.El
+.Sh FILES
+.Bl -tag -width indent
+.It Pa ~/.config/newf/config.m4
+Default configuration file for
+.Xr m4 1 .
+.El
+.Sh SEE ALSO
+.Xr m4 1
+.Sh AUTHORS
+.An yuandi42 Aq realyuandi42@gmail.com
