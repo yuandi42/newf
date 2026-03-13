@@ -39,9 +39,8 @@ push @config_files,
 my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES 2>/dev/null); chomp $xdg_templ_dir;
 if ($xdg_templ_dir && $xdg_templ_dir ne $ENV{HOME}) {
     push @templ_dirs, $xdg_templ_dir;
-} else {
-    my $xdg_templ_dir = $ENV{HOME} ? catfile($ENV{HOME}, 'Templates') : "";
-    push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir;
+} elsif ($ENV{HOME}) {
+    push @templ_dirs, $ENV{HOME} . "Templates";
 }
 
 my $current_filetype = undef;

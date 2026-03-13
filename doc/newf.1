@@ -94,6 +94,15 @@ The directory returned by
 if the above is unavailable.
 .El
 .Pp
+If
+.Ic xdg-user-dir
+is unavailable or returns
+.Pa $HOME ,
+.Nm
+treats it as unavailable and falls back to
+.Pa ~/Templates
+if it exists.
+.Pp
 For a given filetype
 .Ar type/subtype ,
 .Nm
