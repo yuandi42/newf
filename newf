@@ -157,7 +157,7 @@ foreach my $target (@targets) {
         goto LOOP_END;
     }
 
-    if (-x $templ) {system $templ, @$args; goto LOOP_END}
+    if (-x $templ) {system $templ, $name, @$args; goto LOOP_END}
 
     if (-B _) {
         warn "$templ is a binary file. " .
@@ -169,8 +169,10 @@ foreach my $target (@targets) {
 
     my ($i_fh, $o_fh);
     my @m4_argv = ();
-    foreach my($i, $v) (each @$args) {
-        $i--; push @m4_argv, "-DARG${i}='$v'";
+    for my $i (0 .. $#$args) {
+        my $v = $args->[$i];
+        my $idx = $i + 1;
+        push @m4_argv, "-DARG${idx}='$v'";
     } push @m4_argv,  "-DARC='" . scalar @$args . "'";
     my $cmd = join " ", "m4", "-DNAME='$name'", @m4_argv,
         map {"'$_'"} @config_files, $templ;
