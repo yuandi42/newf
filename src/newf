@@ -156,7 +156,7 @@ foreach my $target (@targets) {
     if (!$templ) {
         if (!$flags{stdout}) {
             open my $fh, '>', $name # Use > to truncate if overwriting
-                or (warn "open $name failed!" and next);
+                or (warn "open $name failed: $!" and next);
             close $fh;
         }
         goto LOOP_END;
