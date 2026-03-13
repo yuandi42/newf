@@ -75,7 +75,7 @@ while (my $arg = shift @ARGV) {
                 if (!$new ||  $new eq $cur || $new =~ /(?:^|$sep)$up(?:$sep|$)/) {
                     warn "Illegal type path $new, ignored.";
                     $new = undef;
-                }
+                } else {$new =  lc $new}
                 $current_filetype = $new; next
             }
             if ($_ eq 'x') {$is_exec = !$is_exec; next}
@@ -119,7 +119,7 @@ foreach my $target (@targets) {
     if (!defined $type || $type =~ /^$cur($sep|$)/) {
         my $s = basename $name;
         my $i = rindex $s, '.';
-        my $t = $i >= 0 ? substr $s, $i + 1 : $s;
+        my $t = lc($i >= 0 ? substr $s, $i + 1 : $s);
         if (defined $type) {
             $type =~ s/^$cur/$t/;
         } else {$type = $t}
