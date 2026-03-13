@@ -93,8 +93,8 @@ while (my $arg = shift @ARGV) {
     }
 }
 die "No target specified!" unless @targets;
-@config_files = grep { -r $_ } @config_files;
-@templ_dirs   = grep { -r $_ } @templ_dirs;
+@config_files = grep { -f $_ && -r _ } @config_files;
+@templ_dirs   = grep { -d $_ && -r _ } @templ_dirs;
 
 # targets creation
 my %templ_rec = ();
