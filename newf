@@ -6,6 +6,7 @@ use File::Basename qw<basename dirname>;
 use File::Spec::Functions qw<catfile updir curdir>;
 use File::Glob qw<:globally :nocase>;
 use File::Copy qw<copy>;
+use File::Path qw<make_path>;
 
 my %flags = (verbose => 0, overwrite => 0, stdout => 0,);
 my @config_files = ();
@@ -98,15 +99,18 @@ my $first_stdout = 1;
 foreach my $target (@targets) {
     my ($name, $type, $xbit) = @$target;
     my $is_overwritten = 0;
-        if (!$flags{verbose}) {
-            warn "Cannot create $target as it's already exists.";
-            next
     if (-e $name) {
+        if (!$flags{overwrite}) {
+            warn "Cannot create $name as it's already exists.";
+            next;
         } elsif (!(-f _ && -w _)) {
             warn "Canoot overwrite $name as it's either not a file, " .
                 "or user have no permission to write.";
             next
         } else { $is_overwritten = 1 }
+    } elsif ($flags{overwrite}) {
+        my $dir = dirname($name);
+        make_path($dir) unless -d $dir;
     }
 
     if (!defined $type) {
