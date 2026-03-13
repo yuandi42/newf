@@ -160,10 +160,15 @@ foreach my $target (@targets) {
     if (-x $templ) {system $templ, $name, @$args; goto LOOP_END}
 
     if (-B _) {
-        warn "$templ is a binary file. " .
-            "it will copy to $target anyway." if $flags{stdout};
-        copy ($templ, $target)
-            or (warn "Failed to copy from $templ to $target: $!" and next);
+        if ($flags{stdout}) {
+            warn "$templ is a binary file, printing to stdout may be messy.";
+            open my $fh, '<', $templ or (warn "open $templ failed: $!" and next);
+            binmode $fh; binmode STDOUT;
+            print STDOUT while <$fh>;
+        } else {
+            copy ($templ, $name)
+                or (warn "Failed to copy from $templ to $name: $!" and next);
+        }
         goto LOOP_END;
     }
 
