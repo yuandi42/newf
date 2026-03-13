@@ -142,6 +142,12 @@ foreach my $target (@targets) {
         }
         $templ_rec{$type_holder} = [$templ, $args];
     }
+
+    if ($flags{stdout}) {
+        print STDOUT "\0" unless $first_stdout;
+        $first_stdout = 0;
+    }
+
     if (!$templ) {
         if (!$flags{stdout}) {
             open my $fh, '>', $name # Use > to truncate if overwriting
