@@ -36,9 +36,13 @@ push @config_files,
     catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
             'newf', 'config.m4');
 
-my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES);
-chomp $xdg_templ_dir;
-push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir && $xdg_templ_dir ne ($ENV{HOME} // "");
+my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES 2>/dev/null); chomp $xdg_templ_dir;
+if ($xdg_templ_dir && $xdg_templ_dir ne $ENV{HOME}) {
+    push @templ_dirs, $xdg_templ_dir;
+} else {
+    my $xdg_templ_dir = $ENV{HOME} ? catfile($ENV{HOME}, 'Templates') : "";
+    push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir;
+}
 
 my $current_filetype = undef;
 my $is_exec = 0;
