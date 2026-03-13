@@ -11,7 +11,7 @@ based on target filenames and populates them using templates from your
 
 
 ## Installation
-Main script and its manual page:
+Install main script, its manual page and fish completion script:
 ```sh
 sudo make install
 ```
