@@ -3,7 +3,7 @@
 use v5.42;
 
 use File::Basename qw<basename dirname>;
-use File::Spec::Functions qw<catfile>;
+use File::Spec::Functions qw<catfile updir curdir>;
 use File::Glob qw<:globally :nocase>;
 use File::Copy qw<copy>;
 
@@ -43,6 +43,8 @@ my $current_filetype = undef;
 my $is_exec = 0;
 my @targets = ();
 
+# used for type path sanitization.
+my ($sep, $up, $cur)= map {quotemeta $_} (catfile("", ""), updir(), curdir());
 while (my $arg = shift @ARGV) {
     if ($arg =~ /^-(\w+)$/) {
         my @opt  = split //, $1;
@@ -66,8 +68,11 @@ while (my $arg = shift @ARGV) {
             if ($_ eq 't') {
                 die "-$_ options should be tailing." if $1 !~ /t$/;
                 my $new = shift @ARGV;
-                # TODO: sanitize type path
-                die "illegal argument for -$_" if $new;
+                $new =~ s/^($sep)+//; $new =~ s/($sep)+$//;
+                if (!$new ||  $new eq $cur || $new =~ /(?:^|$sep)$up(?:$sep|$)/) {
+                    warn "Illegal type path $new, ignored.";
+                    $new = undef;
+                }
                 $current_filetype = $new; next
             }
             if ($_ eq 'x') {$is_exec = !$is_exec; next}
