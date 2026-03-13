@@ -199,10 +199,8 @@ foreach my $target (@targets) {
            } else {warn "chmod +x $name failed: $!";}
         } else {warn "get $name stat failed: $!";}
     }
-    if ($flags{verbose}) {
-        printf STDERR "%s %s%s using %s\n",
-            ($is_overwritten ? "Overwrite" : "Create"),
-            ($added_xbit ? "executable" : ""), $target,
-            ($templ // "no tmeplate");
-    }
+    printf STDERR "%s %s%s using %s\n",
+        ($is_overwritten ? "Overwrite" : "Create"),
+        ($added_xbit ? "executable " : ""), $name,
+        ($templ // "no template") if $flags{verbose} ;
 }
