@@ -37,7 +37,7 @@ push @config_files,
 
 my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES);
 chomp $xdg_templ_dir;
-push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir && $xdg_templ_dir ne $ENV{HOME};
+push @templ_dirs, $xdg_templ_dir if $xdg_templ_dir && $xdg_templ_dir ne ($ENV{HOME} // "");
 
 my $current_filetype = undef;
 my $is_exec = 0;
