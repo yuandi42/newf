@@ -113,10 +113,13 @@ foreach my $target (@targets) {
         make_path($dir) unless -d $dir;
     }
 
-    if (!defined $type) {
+    if (!defined $type || $type =~ /^$cur($sep|$)/) {
         my $s = basename $name;
         my $i = rindex $s, '.';
-        my $type = $i >= 0 ? substr $s, $i + 1 : $s;
+        my $t = $i >= 0 ? substr $s, $i + 1 : $s;
+        if (defined $type) {
+            $type =~ s/^$cur/$t/;
+        } else {$type = $t}
     }
 
     my ($args, $templ) = ([], undef);
