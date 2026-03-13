@@ -44,28 +44,27 @@ my $is_exec = 0;
 my @targets = ();
 
 while (my $arg = shift @ARGV) {
-    if ($arg =~ /-\w+/) {
-        my @opt  = split $arg;
-        shift @opt;
+    if ($arg =~ /^-(\w+)$/) {
+        my @opt  = split //, $1;
         foreach (@opt) {
             if ($_ eq 'v') {$flags{"verbose"}   = 1; next}
             if ($_ eq 'f') {$flags{"overwrite"} = 1; next}
             if ($_ eq 'o') {$flags{"stdout"}    = 1; next}
             if ($_ eq 'd') {
-                die "-$_ options should be tailing." if $arg !~ /d$/;
+                die "-$_ options should be tailing." if $1 !~ /d$/;
                 my $new = shift @ARGV;
-                die "illegal argument for -$_" if $new;
+                die "illegal argument for -$_" if !$new;
                 unshift @templ_dirs, $new; next
             }
             if ($_ eq 'c') {
-                die "-$_ options should be tailing." if $arg !~ /d$/;
+                die "-$_ options should be tailing." if $1 !~ /c$/;
                 my $new = shift @ARGV;
-                die "illegal argument for -$_" if $new;
+                die "illegal argument for -$_" if !$new;
                 push @config_files, $new; next
             }
             if ($_ eq 'T') {$current_filetype = undef; next}
             if ($_ eq 't') {
-                die "-$_ options should be tailing." if $arg !~ /d$/;
+                die "-$_ options should be tailing." if $1 !~ /t$/;
                 my $new = shift @ARGV;
                 # TODO: sanitize type path
                 die "illegal argument for -$_" if $new;
