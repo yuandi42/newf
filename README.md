@@ -1,4 +1,9 @@
 # newf
+I've always wondered what this werid "Templates" directory
+created by xdg-user-dirs is for.
+After research, it turned out to be quite useless even on
+full-armored desktop environment like KDE.
+Then I decided to write a script to utilize this dir. So here you are ...
 
 `newf` is a m4-based file creator. It automatically detects filetypes
 based on target filenames and populates them using templates from your
