@@ -175,8 +175,8 @@ foreach my $target (@targets) {
     } elsif (!(open $o_fh, ">", $name)) {
         warn "Failed to open $name: $!"; close $i_fh; next;
     }
-    while (<$i_fh>) {chomp; print $o_fh "$_\n";}
-    close $i_fh; close $o_fh;
+    while (<$i_fh>) { print $o_fh $_; }
+    close $i_fh; close $o_fh unless $flags{stdout};
   LOOP_END:
     my $added_xbit = 0;
     if ($xbit && !$flags{stdout}) {
