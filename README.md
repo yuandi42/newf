@@ -22,6 +22,8 @@ Also there are serveral editor intergration scripts in `editor/`.
 - Basic: `newf script.sh` (detects `sh` type).
 - Executable: `newf +x run.py` (creates an executable Python script).
 - Explicit Type: `newf -t c/header include/utils.h` (uses template at `c/header`).
+- Extra Templates: `newf -d ~/my-templates notes.md` (searches this dir first).
+- Extra Config: `newf -c ~/.config/newf/config.m4 report.tex` (adds m4 macros).
 - Dry Run: `newf -o test.js` (outputs the generated content to stdout).
 
 See `man newf` for full documentation.
