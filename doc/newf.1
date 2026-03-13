@@ -113,8 +113,27 @@ or
 (case-insensitive).
 If a directory matches, it looks for a file named
 .Ar default
+or
+.Ar default.*
 therein.
 If no match is found, it strips the last component (the subtype) and tries again with the remaining path.
+.Pp
+Template files may be:
+.Bl -bullet
+.It
+Text templates, which are processed by
+.Xr m4 1
+and written to the target (or to stdout with
+.Fl o ) .
+.It
+Binary templates, which are copied verbatim (or written to stdout with
+.Fl o ) .
+.It
+Executable templates, which are run directly and are expected to create output
+via side effects. This can be useful for scaffolding a project directory, but it
+is a hack indeed. Only use this mechanism when you know exactly what the
+template does.
+.El
 .Sh M4 VARIABLES
 When processing a text template with
 .Xr m4 1 ,
