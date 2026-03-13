@@ -8,6 +8,7 @@ use File::Glob qw<:globally :nocase>;
 use File::Copy qw<copy>;
 use File::Path qw<make_path>;
 
+# initialization
 my %flags = (verbose => 0, overwrite => 0, stdout => 0,);
 my @config_files = ();
 my @templ_dirs = ();
@@ -46,6 +47,7 @@ my @targets = ();
 
 # used for type path sanitization.
 my ($sep, $up, $cur)= map {quotemeta $_} (catfile("", ""), updir(), curdir());
+# argments handling
 while (my $arg = shift @ARGV) {
     if ($arg =~ /^-(\w+)$/) {
         my @opt  = split //, $1;
@@ -94,6 +96,7 @@ die "No target specified!" unless @targets;
 @config_files = grep { -r $_ } @config_files;
 @templ_dirs   = grep { -r $_ } @templ_dirs;
 
+# targets creation
 my %templ_rec = ();
 my $first_stdout = 1;
 foreach my $target (@targets) {
@@ -122,6 +125,7 @@ foreach my $target (@targets) {
         } else {$type = $t}
     }
 
+    # seeking matching template
     my ($args, $templ) = ([], undef);
     if (exists $templ_rec{$type}) {
         ($templ, $args) = @{$templ_rec{$type}};
@@ -143,6 +147,7 @@ foreach my $target (@targets) {
         $templ_rec{$type_holder} = [$templ, $args];
     }
 
+    # apply tmepl to file generation
     if ($flags{stdout}) {
         print STDOUT "\0" unless $first_stdout;
         $first_stdout = 0;
