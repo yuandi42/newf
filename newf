@@ -132,7 +132,7 @@ foreach my $target (@targets) {
             while ($type && $type ne "." && $type ne "/") {
                 my $pat = catfile $templ_dir, $type;
                 $pat = catfile $pat, 'default' if -d $pat;
-                $templ = (grep {-f $_ && (-r _ || -x _)} glob("$pat.*"))[0];
+                $templ = (grep {-f $_ && (-r _ || -x _)} glob("$pat $pat.*"))[0];
                 last if defined $templ;
                 unshift @$args, basename $type;
                 $type = dirname $type;
