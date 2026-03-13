@@ -11,6 +11,26 @@ my %flags = (verbose => 0, overwrite => 0, stdout => 0,);
 my @config_files = ();
 my @templ_dirs = ();
 
+my $HELP = <<EOF;
+Usage: newf [OPTIONS] [+x|-X|-x] [-t TYPE|-T] TARGET ...
+
+Global Options:
+  -v           Verbose mode.
+  -f           Overwrite existing files and create parent directories.
+  -o           Output to stdout instead of writing to disk.
+  -d DIR       Add DIR to template search path.
+  -c CONFIG    Add CONFIG to m4 config files.
+  -h           Show this help message.
+
+State-changing Options:
+  -t TYPE      Set filetype for following targets (e.g., -t sh).
+               If TYPE starts with './', '.' is replaced by auto-detected type.
+  -T           Auto-detect filetype from extension (default).
+  +x           Set execute bit for following targets.
+  -X           Unset execute bit for following targets (default).
+  -x           Toggle execute bit for following targets.
+EOF
+
 push @config_files,
     catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
             'newf', 'config.m4');
@@ -53,7 +73,11 @@ while (my $arg = shift @ARGV) {
             }
             if ($_ eq 'x') {$is_exec = !$is_exec; next}
             if ($_ eq 'X') {$is_exec =         0; next}
-            die "Unknown option $_."
+            if ($_ eq 'h') {
+                print STDERR $HELP;
+                exit 0;
+            }
+            die "Unknown option $_, use -h option for help message."
         }
     } elsif ($arg eq '+x') {
         $is_exec = 1;
