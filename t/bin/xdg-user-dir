@@ -1,0 +1,4 @@
+#!/bin/sh
+
+[ "$1" = "TEMPLATES" ] &&
+	echo "$(dirname $(dirname $(realpath "$0")))"/templ || exit 1

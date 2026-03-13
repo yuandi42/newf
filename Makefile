@@ -1,10 +1,11 @@
 PREFIX = /usr/local
+TESTDIR = t
 
 test:
-	./newf -vf -xt sh 1.sh -TX text 1.py -t ./fun 1.pl
+	prove -r $(TESTDIR)
 
 clean:
-	echo TODO: rm all files creates by test.
+	rm -rf $(TESTDIR)/templ $(TESTDIR)/config/newf
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
