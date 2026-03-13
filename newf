@@ -94,20 +94,21 @@ die "No target specified!" unless @targets;
 @templ_dirs   = grep { -r $_ } @templ_dirs;
 
 my %templ_rec = ();
-while (my $target = shift @targets) {
+my $first_stdout = 1;
+foreach my $target (@targets) {
+    my ($name, $type, $xbit) = @$target;
     my $is_overwritten = 0;
-    if (-e $target) {
         if (!$flags{verbose}) {
             warn "Cannot create $target as it's already exists.";
             next
+    if (-e $name) {
         } elsif (!(-f _ && -w _)) {
-            warn "Canoot overwrite $target as it's either not a file, " .
+            warn "Canoot overwrite $name as it's either not a file, " .
                 "or user have no permission to write.";
             next
         } else { $is_overwritten = 1 }
     }
 
-    my ($name, $type, $xbit) = @$target;
     if (!defined $type) {
         my $s = basename $name;
         my $i = rindex $s, '.';
@@ -135,9 +136,12 @@ while (my $target = shift @targets) {
         $templ_rec{$type_holder} = [$templ, $args];
     }
     if (!$templ) {
-        open my $fh, '>>', $target
-            or (warn "open $target failed!" and next);
-        close $fh, goto LOOP_END;
+        if (!$flags{stdout}) {
+            open my $fh, '>', $name # Use > to truncate if overwriting
+                or (warn "open $name failed!" and next);
+            close $fh;
+        }
+        goto LOOP_END;
     }
 
     if (-x $templ) {system $templ, @$args; goto LOOP_END}
@@ -161,19 +165,19 @@ while (my $target = shift @targets) {
         or (warn "Failed to open pipe to run $cmd: $!" and next);
     if ($flags{stdout}) {
         $o_fh = \*STDOUT;
-    } elsif (!(open $o_fh, ">", $target)) {
-        warn "Failed to open $target: $!"; close $i_fh; next;
+    } elsif (!(open $o_fh, ">", $name)) {
+        warn "Failed to open $name: $!"; close $i_fh; next;
     }
     while (<$i_fh>) {chomp; print $o_fh "$_\n";}
     close $i_fh; close $o_fh;
   LOOP_END:
     my $added_xbit = 0;
-    if ($xbit) {
-        if (my $mode = (stat $target)[2]) {
-            if (chmod $mode | 0111, $target) {
+    if ($xbit && !$flags{stdout}) {
+        if (my $mode = (stat $name)[2]) {
+            if (chmod $mode | 0111, $name) {
                 $added_xbit = 1;
-           } else {warn "chmod +x $target failed: $!";}
-        } else {warn "get $target stat failed: $!";}
+           } else {warn "chmod +x $name failed: $!";}
+        } else {warn "get $name stat failed: $!";}
     }
     if ($flags{verbose}) {
         printf STDERR "%s %s%s using %s\n",
