@@ -4,7 +4,6 @@ use v5.42;
 
 use File::Basename qw<basename dirname>;
 use File::Spec::Functions qw<catfile updir curdir>;
-use File::Glob qw<:globally :nocase>;
 use File::Copy qw<copy>;
 use File::Path qw<make_path>;
 
@@ -126,25 +125,45 @@ foreach my $target (@targets) {
     }
 
     # seeking matching template
-    my ($args, $templ) = ([], undef);
+    my ($args, $templ) = (undef, undef);
     if (exists $templ_rec{$type}) {
         ($templ, $args) = @{$templ_rec{$type}};
     } else {
-        my $type_holder = $type;
         # find templ
-        foreach my $templ_dir (@templ_dirs) {
-            while ($type && $type ne "." && $type ne "/") {
-                my $pat = catfile $templ_dir, $type;
-                $pat = catfile $pat, 'default' if -d $pat;
-                $templ = (grep {-f $_ && (-r _ || -x _)} glob("$pat $pat.*"))[0];
+        foreach my $dir (@templ_dirs) {
+            $args = [split /$sep/, $type];
+            while (my $arg = shift @$args) {
+                my $pat = quotemeta $arg;
+                opendir(my $dh, $dir) or (warn "opendir $dir failed: $!" and next);
+                my $cand = undef; # cand stands for templ candidate.
+                while (readdir $dh) {
+                    if ($_ =~ /^$pat$/i) {
+                        $cand = catfile $dir, $_;
+                        ($templ = $cand) and last if (-f $cand && (-r _ || -x _));
+                        last if (-d _ && -r _);
+                    } elsif ($_ =~ /^$pat\..*/i) {
+                        $cand = catfile $dir, $_;
+                        ($templ = $cand) and last if (-f $cand && (-r _ || -x _));
+                    } $cand = undef;
+                } closedir $dh;
                 last if defined $templ;
-                unshift @$args, basename $type;
-                $type = dirname $type;
+                (unshift @$args, $arg) and last if !defined $cand;
+                $dir = $cand;
             }
-            $type = $type_holder;
-            last if defined $templ;
+            $templ = $dir if !defined $templ;
+            if (-d $templ) {
+                opendir(my $dh, $templ)
+                    or (warn "opendir $dir failed: $!" and ($templ = undef) and next);
+                my $cand = undef;
+                while (readdir $dh) {
+                    if ($_ =~ /^default(?:\..*)?/i) {
+                        $cand = catfile $templ, $_;
+                        ($templ = $cand) and last if (-f $cand && (-r _ || -x _));
+                    } $cand = undef;
+                } $templ = undef if !defined $cand;
+            } last if defined $templ;
         }
-        $templ_rec{$type_holder} = [$templ, $args];
+        $templ_rec{$type} = [$templ, $args];
     }
 
     # apply tmepl to file generation
