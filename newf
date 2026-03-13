@@ -8,11 +8,12 @@ use File::Glob qw<:globally :nocase>;
 use File::Copy qw<copy>;
 
 my %flags = (verbose => 0, overwrite => 0, stdout => 0,);
-my @config_files = (
-    catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
-            'newf', 'config.m4'),
-    );
+my @config_files = ();
 my @templ_dirs = ();
+
+push @config_files,
+    catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
+            'newf', 'config.m4');
 
 my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES);
 chomp $xdg_templ_dir;
