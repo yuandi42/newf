@@ -11,8 +11,7 @@ Main script and its manual page:
 sudo make install
 ```
 
-(Optional)
-+ `newf.vim`: just manual add it in your VIMPATH. 
+Also there are serveral editor intergration scripts in `editor/`.
 
 ## Usage
 - Basic: `newf script.sh` (detects `sh` type).
