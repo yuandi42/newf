@@ -85,6 +85,7 @@ while (my $arg = shift @ARGV) {
         push @targets, [$arg, $current_filetype, $is_exec]
     }
 }
+die "No target specified!" unless @targets;
 @config_files = grep { -r $_ } @config_files;
 @templ_dirs   = grep { -r $_ } @templ_dirs;
 
