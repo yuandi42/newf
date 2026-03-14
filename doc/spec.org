@@ -1,0 +1,88 @@
+#+title: Spec Of newf(1), the new file creator.
+
+* OPTIONS
+Options that take effect only on follwing files and can be toggled back:
++ ~-t filetype~: sets filetype of following files, e.g., =newf -t sh script=.
+  Specially,
+  1. if ~filetype~ is an illegal string, e.g., =-t ''=, or contain relative path
+     to upper dir like "type/../others", it will act like ~T~;
+  2. if ~filetype~ starts with './', newf will replace '.' with filetype it
+     auto-detects from filename. E.g, in =newf -t ./tex Makefile=, the filetype
+     of this makefile will be set as ~make/tex~ actually.
++ ~-T~: unsets filetype of following files, newf will auto detect their filetype
+  based on filename suffix, which is default behaviour.
++ ~+x~: sets following files execute bit on. I.e., following created files will
+  be executable.
++ ~-X~: sets following files execute bit off, which is default behaviour.
++ ~-x~: filps following files execute bit. If former files are set to be
+  executable, then following files will be unexecutable, vice versa.
+
+Options that set global flag, influence on every files in arguments list.
++ ~-v~: outputs message about "which files is created using which templates" to
+ stderr.
++ ~-f~: allows newf to overwrite existing files and to create new directory if
+  needed.
++ ~-o~: makes newf output file content to stdout instead of the actual file in
+  disk. If there are multiple files in arguments, each file content in stdout
+  would be separted using a line consists of NULL.
++ ~-d directory~: sets an additional source directory of templates. newf will
+  search template file in this directory first. User can set multiple additoinal
+  directories.
++ ~-c config~: sets an additional config m4 file. newf will source all
+  config m4 files ahead of the template file when creates new file.
+* FILE TYPES 
+** Filetype auto-detection
+If user doesn't specify a filetype on target file, or specifies a filetype
+string starts with ~./~,  newf would try to guess a filetype based on target
+filename.
+1. if filename match regexp ~.*\.([^\.]+)~, filetype will be set as ~\1~. E.g.,
+   filetype of ~-t ./run run.sh~ would be auto-detected as ~sh/run~.
+2. else filetype would be set as ~filename~. E.g., filetype of ~PKGBUILD~ would
+   be set as ~pkgbuild~. The template mathcing is case-insensitive anyway.
+** Find the matching template
+For any filetype ~type/(.../)*subtype~, newf will look in all templates
+directories for:
+1. file/directory ~type/([^/]+/)*subtype(\.[^\.])?~, this regexp allows template
+   have a suffix, which helps text editor get the correct filetype when editing
+   templates file.
+2. if file/directory ~type/(subtype/)*subsubtype~ doesn't exist in all templates
+   directories, then goto 1, but this time newf will search template for
+   filetype ~type/(.../)*subsubtype~...
+3. finally we may get a matching file/directory for given type. if it's a file,
+   then it's the template file we want; if it's a directory, check if there is a
+   file ~default(\.[^\.])?~ in this directory: if yes, that's the template
+   *file* we want, if not, goto 1 but search for upper type.
+
+If newf doesn't find a matching template file for given types, it would simply
+touch an empty target file. Note that if target has already exists and ~-f~ flag
+is on, newf will still clear the original file content and leave an empty file.
+* TEMPLATES DIRECTORIES
+newf will try to search matching templates in following ordeer:
+1. the directories specified by ~-d~ options, the latter one in argv has higher
+  priority.
+2. the ~XDG_TEMPLATES_DIR~ given by by ~xdg-user-dir TEMPLATES~, or
+   ~$HOME/Templates~ if there is no ~xdg-user-dir~ in ~PATH~.
+* TEMPLATE FILE
++ If the file is a text file and isn't executable, newf will run
+  #+begin_src shell
+m4 \
+    -DNAME=filename [-DARG1=subType] [-DARG2=subSubType] ... -DARC=subTypesCount \
+    default_config_file config_file_former ... config_file_latter template_file
+  #+end_src
+  and output would be redirected to target file, or stdout if ~-o~ is on.
+
++ If the file isn't executable and isn't a plain text file, newf will just copy
+  that file to the target file, even if ~-o~ flags is on.
+
++ If the matching template file is executable, newf would execute it with args
+  in such order: filename, sub-type(s). No stdout redirect here as newf totally
+  relies the side-effect of executable template to create new file or any other
+  hacky thing. So PLEASE only use executable template when you know what you are
+  doing.
+* CONFIG FILE
+When newf invokes m4 to parse template file, it also lets m4 source config
+file(s). By default only ~$XDG_CONFIG_DIR/newf/config.m4/~ would be sourced (if
+it exists), and user can set frequently-used marco like author name, email,
+blabla here. User can also specify additional config file(s) using ~c~ options.
+The former where be sourced ahead in arg list when newf invokes m4. And the
+default config file would always be sourced first (if it exists).

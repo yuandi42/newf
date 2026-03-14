@@ -1,0 +1,71 @@
+#+title: Test Organization and Coverage Guide for newf(1), the file creator.
+
+* Organization
+prove(1) and Test::More are used to test all cli behaviour of newf(1).
+All ~*.t~ test file should stored in ./t directory.
+** XDG Template dir
+newf uses ~xdg-user-dir~ to find XDG Template dir, in test suite a super
+lightweight ~xdg-user-dir~ script in ~./t/bin~ is used to set this dir to
+./t/templ. Before running the test, ~./t/bin~ should be added into path so that
+the alternaive implementation could shadow the formal one.
+
+Also other temlpate dirs needed for testing should be in ./t dir.
+** XDG Config dir
+newf's default config.m4 is set as XDG_CONFIG_DIR/newf/config.m4. There is a
+default config.m4 (as well as other m4 file needed for testing) used for testing
+stored in ./t/config/config.m4. Hence the environment variable ~XDG_CONFIG_DIR~
+should be set as ~./t/config~ before formal testing.
+* Behaviour coverage
+Following behaviour should be covered in test suite.
+** Target arguments
+1. If no target file argument is given to newf, newf will die early.
+** Templates
+1. executable template create files by the side-effect of its execution.
+2. unexecutable text template will be processed by m4.
+3. unexecutable binary template will be copied to destination.
+** Option flags
+*** -v -h warning message
+verbose log, help message and all warning should output to stderr instead of
+cluttering stdout.
+*** -o
+1. For of *unexecutable template*, output is redirected to stdout.
+2. For *executable template*, coresponding content in stdout is unknown, and the
+   file will still be created in disk as newf rely on side-effect of template
+   execution.
+3. If multiple targets are given to newf, each output should be separated with a
+   NULL character.
+*** -f
+1. Existed file will be overwritten.
+2. Parent directory of target will be created if it doesn't exists.
+*** -d
+1. newf firstly seraches the diretory set by the last -d option, then the
+   one-but-last, ... then the one set by -d option, then the xdg template dir.
+*** -c
+1. For unexecutable text template, m4 would firstly source default config.m4,
+   then the m4 file set by the first -c option, then the second -c option, ...
+   then the m4 file set by the last -c option.
+*** -x +x -X
+1. +x should make following target executable.
+2. -X should make following target unexecutable. That's the default behaviour,
+   means that if no xbit corresponding options is ever set, target should be
+   unexecutable.
+3. -x should flip the xbit set by previous options. If no xbit corresponding
+   options is set, since -X is default behaviour, -x would make following target
+   executable.
+*** -t filetype and T
+1. We say filetype template exists in a template dir if and only if:
+   a. dir/filetype or dir/filetype.* exists and is a file.
+   b. dir/filetype exists and is a diretory which contains a file name like
+      ~default~.
+   Note that the globbing pattern matching should be case insensitive, so
+   ~Makefile~ filetype should match a ~makefile~ template.
+2. -T should unset filetype, make it =undef=, =undef= is default filetype.
+3. If filetype isn't set for a target, newf will extract target's suffix as
+   filetype. E.g.:
+   a. target ~run.sh~'s type would be set to ~sh~.
+   b. target ~Makefile~'s type would be set to ~Makefile~.
+4. If targets filetype match ~./*~, the beginning cur dot should be replaced
+   with detected filetype based on target name (mentioned in entry above) before
+   seeking template.
+5. If filetype is an illegal strings, such as =-t ''=, =-t 'bla/../bla'=, -t
+   will unset filtype, acting like -T.
