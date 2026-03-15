@@ -64,7 +64,7 @@ my $home = tempdir(CLEANUP => 1);
 sub run_newf {
     my (@args) = @_;
     local $ENV{PATH} = $bin_root . ':' . ($ENV{PATH} // '');
-    local $ENV{XDG_CONFIG_DIR} = $config_root;
+    local $ENV{XDG_CONFIG_HOME} = $config_root;
     local $ENV{HOME} = $home;
 
     my $err = gensym;

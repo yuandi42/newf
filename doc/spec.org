@@ -81,7 +81,7 @@ m4 \
   doing.
 * CONFIG FILE
 When newf invokes m4 to parse template file, it also lets m4 source config
-file(s). By default only ~$XDG_CONFIG_DIR/newf/config.m4/~ would be sourced (if
+file(s). By default only ~$XDG_CONFIG_HOME/newf/config.m4/~ would be sourced (if
 it exists), and user can set frequently-used marco like author name, email,
 blabla here. User can also specify additional config file(s) using ~c~ options.
 The former where be sourced ahead in arg list when newf invokes m4. And the

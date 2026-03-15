@@ -34,7 +34,7 @@ State-changing Options:
 EOF
 
 push @config_files,
-    catfile($ENV{XDG_CONFIG_DIR} // catfile($ENV{HOME} // '.', '.config'),
+    catfile($ENV{XDG_CONFIG_HOME} // catfile($ENV{HOME} // '.', '.config'),
             'newf', 'config.m4');
 
 my $xdg_templ_dir = qx(xdg-user-dir TEMPLATES 2>/dev/null); chomp $xdg_templ_dir;

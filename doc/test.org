@@ -11,9 +11,9 @@ the alternaive implementation could shadow the formal one.
 
 Also other temlpate dirs needed for testing should be in ./t dir.
 ** XDG Config dir
-newf's default config.m4 is set as XDG_CONFIG_DIR/newf/config.m4. There is a
+newf's default config.m4 is set as XDG_CONFIG_HOME/newf/config.m4. There is a
 default config.m4 (as well as other m4 file needed for testing) used for testing
-stored in ./t/config/config.m4. Hence the environment variable ~XDG_CONFIG_DIR~
+stored in ./t/config/config.m4. Hence the environment variable ~XDG_CONFIG_HOME~
 should be set as ~./t/config~ before formal testing.
 * Behaviour coverage
 Following behaviour should be covered in test suite.
