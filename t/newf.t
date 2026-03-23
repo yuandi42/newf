@@ -82,7 +82,7 @@ make_path($templ_root);
 
 write_text(catfile($templ_root, 'nftxt'), "text: NAME\n");
 write_text(catfile($templ_root, 'nffoo', 'default'),
-    "name: NAME\narg1: ARG1\narg2: ARG2\narc: ARC\n");
+    "name: NAME\narg1: ARG1\narg2: ARG2\nargc: ARGC\n");
 write_text(catfile($templ_root, 'nftsh', 'tex'), "kind: sh-tex\n");
 write_text(catfile($templ_root, 'nfcase'), "case: NAME\n");
 write_text(catfile($templ_root, 'nfcfg'), "x: X\nauthor: AUTHOR\n");
@@ -113,7 +113,7 @@ subtest 'm4 args and fallback template' => sub {
     my ($exit) = run_newf('-t', 'nffoo/bar/baz', $target);
     is($exit, 0, 'exit 0');
     is(normalize_output(slurp_text($target)),
-        "name: $target\narg1: bar\narg2: baz\narc: 2\n",
+        "name: $target\narg1: bar\narg2: baz\nargc: 2\n",
         'm4 variables expanded');
 };
 

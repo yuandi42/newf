@@ -66,7 +66,7 @@ newf will try to search matching templates in following ordeer:
 + If the file is a text file and isn't executable, newf will run
   #+begin_src shell
 m4 \
-    -DNAME=filename [-DARG1=subType] [-DARG2=subSubType] ... -DARC=subTypesCount \
+    -DNAME=filename [-DARG1=subType] [-DARG2=subSubType] ... -DARGC=subTypesCount \
     default_config_file config_file_former ... config_file_latter template_file
   #+end_src
   and output would be redirected to target file, or stdout if ~-o~ is on.

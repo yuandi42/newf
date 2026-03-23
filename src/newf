@@ -206,7 +206,7 @@ foreach my $target (@targets) {
         my $v = $args->[$i];
         my $idx = $i + 1;
         push @m4_argv, "-DARG${idx}='$v'";
-    } push @m4_argv,  "-DARC='" . scalar @$args . "'";
+    } push @m4_argv,  "-DARGC='" . scalar @$args . "'";
     my $cmd = join " ", "m4", "-DNAME='$name'", @m4_argv,
         map {"'$_'"} @config_files, $templ;
     open($i_fh, "-|", $cmd)
